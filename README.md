@@ -59,5 +59,47 @@ When debug level logging is required, pass in *debug=true* or *debug=1* argument
 ... | mvrex debug=1 field=mydata "^\d{1,5}$"
 ```
 
+
+## Update reference table
+
+Note that the CIM dicionary is only used for reference purpose only.  It is NOT used on the CIM Validator dashboard.  If you'd like to refresh your local table with the mostrecent CIM version, run the following search.
+
+```
+| inputlookup cim_validation_dictionary
+| search NOT [ rest splunk_server=local /servicesNS/-/-/apps/local/Splunk_SA_CIM  | rename version as cim_version | return cim_version ]
+| append [
+      datamodel
+    | spath
+    | table _raw modelName displayName
+    | search [ rest /servicesNS/nobody/Splunk_SA_CIM/data/models | search eai:appName=Splunk_SA_CIM | rename title as modelName | fields modelName ]
+    | eval deprecated=if(displayName like "%Deprecate%", 1, 0)
+    | search modelName!="Splunk_CIM_Validation"
+    | spath output=objects "objects{}"
+    | fields - _raw
+    | mvexpand objects 
+    | spath input=objects output=outfields "calculations{}.outputFields{}"
+    | spath input=objects output=fields "fields{}" 
+    | eval fields=mvappend(fields, outfields) 
+    | fields - objects outfields
+    | mvexpand fields 
+    | spath input=fields 
+    | table modelName owner fieldName fieldSearch displayName comment.expected_values{} comment.recommended comment.description type hidden deprecated
+    | rename fieldName as field comment.description as description, type as data_type, comment.recommended as recommended 
+    | eval possible_values=mvjoin('comment.expected_values{}', ", ") 
+    | eval object = owner
+    | appendcols [ rest splunk_server=local /servicesNS/-/-/apps/local/Splunk_SA_CIM  | rename version as cim_version | table cim_version ]
+    | eventstats values(cim_version) as cim_version
+    | rename modelName as datamodel
+    | rex field=object mode=sed "s/^.*?\.([^.]+)$/\1/"
+    | search data_type!=objectCount NOT data_type=childCount NOT field=_time NOT field=host NOT field=source NOT field=sourcetype
+    | table cim_version, datamodel, object, field, data_type, description, possible_values, recommended, deprecated
+| dedup datamodel object field ]
+| sort cim_version sort datamodel object field
+| outputlookup cim_validation_dictionary
+```
+
+
+
+
 # Legal
 * *Splunk* is a registered trademark of Splunk, Inc.

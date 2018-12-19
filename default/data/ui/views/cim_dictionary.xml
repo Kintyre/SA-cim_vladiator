@@ -5,11 +5,20 @@
       <label>Field name:</label>
       <default>*</default>
     </input>
+    <input type="dropdown" token="cim_version">
+      <label>CIM Version</label>
+      <fieldForLabel>cim_version</fieldForLabel>
+      <fieldForValue>cim_version</fieldForValue>
+      <search>
+        <query>| inputlookup cim_validation_dictionary | stats count by cim_version | sort cim_version</query>
+      </search>
+      <default>4.12.0</default>
+    </input>
     <input type="dropdown" token="dm">
       <label>Datamodel:</label>
       <choice value="*">Any</choice>
       <search>
-        <query>| inputlookup cim_validation_dictionary | stats count by datamodel</query>
+        <query>| inputlookup cim_validation_dictionary | search cim_version=$cim_version$ | stats count by datamodel</query>
       </search>
       <fieldForLabel>datamodel</fieldForLabel>
       <fieldForValue>datamodel</fieldForValue>
@@ -41,7 +50,7 @@
       <table>
         <title>Dictionary</title>
         <search id="cim_base">
-          <query>| inputlookup cim_validation_dictionary | search datamodel="$dm$" field="$field$" | fields - cim_version</query>
+          <query>| inputlookup cim_validation_dictionary | search datamodel="$dm$" field="$field$" cim_version=$cim_version$ | fields - cim_version</query>
           <earliest>0</earliest>
           <latest></latest>
         </search>

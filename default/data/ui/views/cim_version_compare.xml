@@ -1,0 +1,65 @@
+<form>
+  <label>CIM Version Compare</label>
+  <description>Compare differences between CIM versions</description>
+  <search id="cim_versions">
+    <query>| inputlookup cim_validation_dictionary | stats count by cim_version</query>
+  </search>
+  <search id="compare_base">
+    <query>
+    | inputlookup cim_validation_dictionary | search cim_version=$version_a|s$ OR cim_version=$version_b|s$ | sort - cim_version 
+    </query>
+  </search>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="version_a">
+      <label>Base version</label>
+      <search base="cim_versions">
+        <query/>
+      </search>
+      <fieldForLabel>cim_version</fieldForLabel>
+      <fieldForValue>cim_version</fieldForValue>
+    </input>
+    <input type="dropdown" token="version_b">
+      <label>Updated version</label>
+      <search base="cim_versions">
+        <query>search cim_version!=$version_a|s$</query>
+      </search>
+      <fieldForLabel>cim_version</fieldForLabel>
+      <fieldForValue>cim_version</fieldForValue>
+    </input>
+    <input type="dropdown" token="dm">
+      <label>Data model</label>
+      <search base="compare_base">
+        <query>| stats count by datamodel</query>
+      </search>
+      <fieldForLabel>datamodel</fieldForLabel>
+      <fieldForValue>datamodel</fieldForValue>
+      <choice value="*">All</choice>
+      <default>*</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Datamodel differences:  Upgrading from $version_a$ to $version_b$</title>
+      <table>
+        <search base="compare_base">
+          <query>
+            <![CDATA[
+            | search datamodel=$dm$
+            | fields - recommended
+            | stats list(*) as * dc(*) as dc_* by datamodel object field
+            | eval diffs=if(dc_cim_version=1,1,0)
+            | fields - dc_cim_version
+            | foreach dc_* [ eval diffs=diffs+if('<<FIELD>>'>1,1,0) ]
+            | where diffs>0
+            | fields - dc_*
+            | eval diffs=case(mvcount(cim_version)>1, diffs, cim_version=="$version_b$", "ADDED", cim_version=="$version_a$", "REMOVED")
+          ]]>
+          </query>
+        </search>
+        <option name="count">10</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>
