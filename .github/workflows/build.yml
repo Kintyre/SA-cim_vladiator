@@ -1,0 +1,70 @@
+name: Build Splunk app
+
+on:
+  push:
+    tags:
+    - 'v*'
+    branches:
+    - master
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7]
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Dump GitHub context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+
+    - uses: actions/checkout@v2
+      with:
+        # We need tags to run 'git describe', so do a full clone.  See https://github.com/actions/checkout/issues/338
+        fetch-depth: 0
+    - uses: FranzDiebold/github-env-vars-action@v1.2.0
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install kintyre-splunk-conf==v0.8-beta5
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: ksconf package build
+      id: buildpkg
+      run: |
+        set -x
+        echo "Build number ${{ github.run_id }}"
+        ./build.sh
+        set +x
+        echo "##[set-output name=path;]$(cat .latest_release)"
+        echo "##[set-output name=name;]$(cat latest_release)"
+    - name: Create Release
+      uses: actions/create-release@v1
+      id: create_release
+      if: contains(github.ref, 'tags/v')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      id: upload-release-asset
+      if: contains(github.ref, 'tags/v')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.buildpkg.outputs.path}}
+        asset_name: ${{ steps.buildpkg.outputs.name}}
+        asset_content_type: application/gzip

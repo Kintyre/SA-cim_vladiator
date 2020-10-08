@@ -7,3 +7,4 @@ metadata/local.meta
 build/
 dist/
 .latest_release
+latest_release

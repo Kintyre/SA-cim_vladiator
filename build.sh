@@ -30,6 +30,7 @@ cd build
 tar -czvf "../dist/$TARBALL" "$APP"
 )
 echo "dist/$TARBALL" > .latest_release
+echo "$TARBALL" > latest_release
 
 echo
 echo "New release:  dist/$TARBALL"
