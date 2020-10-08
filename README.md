@@ -1,4 +1,4 @@
-# Welcome
+# CIM Vladiator (Kintyre Edition)
 This Splunk app was developed with one goal in mind, reduce amount of time spent validating Splunk Common Information Model (CIM) compliance of technology add-ons (TA's). Use of this app simplifies validation process in several ways:
 * Identifies fields that are required, but missing
 * Validates data confirms to expected CIM values
@@ -20,7 +20,7 @@ App installation is simple, and only needs to be present on the search head. Doc
 You can also build a local package like so:
 
     # Download from git
-    git clone https://github.com/hire-vladimir/SA-cim_vladiator
+    git clone https://github.com/Kintyre/SA-cim_vladiator
     cd SA-cim_vladiator
 
     # Launch the build process
@@ -33,7 +33,7 @@ You can also build a local package like so:
 to fill
 
 ## Screenshot
-![CIM validator](https://raw.githubusercontent.com/hire-vladimir/SA-cim_vladiator/master/static/screenshot1.png)
+![CIM validator](static/screenshot1.png)
 
 ## System requirements
 App was developed for use with Splunk 6.2+
