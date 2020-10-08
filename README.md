@@ -4,7 +4,12 @@ This Splunk app was developed with one goal in mind, reduce amount of time spent
 * Validates data confirms to expected CIM values
 * Rapid prototyping and validation
 
-This project is hosted on GitHub, https://github.com/hire-vladimir/SA-cim_vladiator
+Note that this is the *Kintyre Edition* of the CIM Vladiator
+
+This project is hosted on GitHub, https://github.com/Kintyre/SA-cim_vladiator
+
+The upstream project is located at https://github.com/hire-vladimir/SA-cim_vladiator/
+
 
 # Install
 App installation is simple, and only needs to be present on the search head. Documentation around app installation can be found at http://docs.splunk.com/Documentation/AddOns/released/Overview/Singleserverinstall
