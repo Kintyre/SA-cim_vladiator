@@ -29,7 +29,7 @@ jobs:
       with:
         # We need tags to run 'git describe', so do a full clone.  See https://github.com/actions/checkout/issues/338
         fetch-depth: 0
-    - uses: FranzDiebold/github-env-vars-action@v1.2.0
+    - uses: FranzDiebold/github-env-vars-action@v1.2.1
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
